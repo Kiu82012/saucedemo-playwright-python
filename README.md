@@ -1,6 +1,6 @@
 # SauceDemo Playwright Automation
 
-This project demonstrates a professional automated testing framework using **Python** and **Playwright**.
+This project demonstrates a automated testing framework using **Python** and **Playwright**.
 
 ## 🚀 Key Improvements (2026 Update)
 * **Page Object Model (POM):** Decoupled test logic from page elements for better maintainability.
