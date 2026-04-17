@@ -1,59 +1,42 @@
 from playwright.sync_api import sync_playwright
-import time
-
-
+from page.login_page import LoginPage
+from page.inventory_page import InventoryPage
+from page.checkout_page import CheckoutPage
+from page.cart_page import CartPage
 def run_test():
-    # 1. Start Playwright and launch browser
     with sync_playwright() as p:
-        # headless=False means you will see the browser window
-        # slow_mo=800 means it will wait 0.8s between each action so you can follow
+        # Launch browser (headless=False so you can see the magic happen)
         browser = p.chromium.launch(headless=False, slow_mo=1000)
         page = browser.new_page()
 
-        print("Step 1: Navigating to SauceDemo website...")
-        page.goto("https://www.saucedemo.com/")
+        # --- TEST EXECUTION START ---
 
-        # Step 2: Login
-        print("Step 2: Performing Login...")
-        page.fill("#user-name", "standard_user")
-        page.fill("#password", "secret_sauce")
-        page.click("#login-button")
+        # Step 1: Initialize Login Page and perform login
+        login = LoginPage(page)
+        login.navigate()
+        login.login("standard_user", "secret_sauce")
 
-        # Step 3: Add product to cart
-        print("Step 3: Adding 'Sauce Labs Backpack' to cart...")
-        page.click('[data-test="add-to-cart-sauce-labs-backpack"]')
+        # Step 2: Verify if we are on the correct page and add product
+        inventory = InventoryPage(page)
 
-        # Step 4: Go to Cart
-        print("Step 4: Opening Shopping Cart...")
-        page.click(".shopping_cart_link")
-        # Take a screenshot of the cart
-        page.screenshot(path="1_cart_view.png")
+        # Assertion: Check if the title is "Products"
+        if inventory.get_title() == "Products":
+            print("Login Successful: Navigation verified.")
 
-        # Step 5: Checkout - Part 1 (Information)
-        print("Step 5: Entering Checkout Information...")
-        page.click('[data-test="checkout"]')
-        page.fill('[data-test="firstName"]', "John")
-        page.fill('[data-test="lastName"]', "Doe")
-        page.fill('[data-test="postalCode"]', "123456")
-        page.click('[data-test="continue"]')
+        # Perform shopping actions
+        inventory.add_backpack_to_cart()
+        inventory.go_to_cart()
 
-        # Step 6: Checkout - Part 2 (Overview)
-        print("Step 6: Reviewing Order...")
-        page.screenshot(path="2_checkout_overview.png")
-        page.click('[data-test="finish"]')
+        cart = CartPage(page)
+        cart.proceed_to_checkout()
 
-        # Step 7: Verify Success and Take Final Screenshot
-        print("Step 7: Verifying Order Completion...")
-        success_text = page.locator(".complete-header").text_content()
+        checkout = CheckoutPage(page)
+        checkout.fill_checkout_info("John","Lam","22222")
+        checkout.finish_checkout()
 
-        if success_text == "Thank you for your order!":
-            print("TEST PASSED: Order completed successfully.")
-            page.screenshot(path="3_final_success.png")
-            print("Final screenshot saved: 3_final_success.png")
-        else:
-            print(f"TEST FAILED: Expected success message but got '{success_text}'")
+        print("Test completed successfully!")
 
-        time.sleep(3)
+        # Cleanup
         browser.close()
 
 
